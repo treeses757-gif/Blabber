@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="styles/main.css">
     <link rel="stylesheet" href="styles/theme.css">
     <link rel="stylesheet" href="styles/components.css">
-    <!-- Карта импортов: Firebase всегда есть, библиотеки подключаем позже динамически -->
     <script type="importmap">
         {
             "imports": {
@@ -30,17 +29,22 @@
     </div>
 
     <script type="module">
-        // Динамически загружаем библиотеки, если они нужны, чтобы избежать ошибок 404
+        // Динамически загружаем библиотеки (если они есть), чтобы избежать ошибок 404
         try {
             await import('./libs/simple-peer.min.js');
-            window.SimplePeer = (await import('simple-peer')).default;
+            window.SimplePeer = window.SimplePeer || (typeof SimplePeer !== 'undefined' ? SimplePeer : null);
+            if (!window.SimplePeer) console.warn('SimplePeer не определён');
+            else console.log('SimplePeer загружен');
         } catch(e) {
             console.warn('simple-peer не загружен, звонки будут недоступны');
             window.SimplePeer = null;
         }
+
         try {
             await import('./libs/RecordRTC.js');
-            window.RecordRTC = window.RecordRTC || (await import('RecordRTC')).default;
+            window.RecordRTC = window.RecordRTC || (typeof RecordRTC !== 'undefined' ? RecordRTC : null);
+            if (!window.RecordRTC) console.warn('RecordRTC не определён');
+            else console.log('RecordRTC загружен');
         } catch(e) {
             console.warn('RecordRTC не загружен, видеосообщения будут недоступны');
             window.RecordRTC = null;
