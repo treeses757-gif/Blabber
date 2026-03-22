@@ -29,26 +29,9 @@
     </div>
 
     <script type="module">
-        // Динамически загружаем библиотеки (если они есть), чтобы избежать ошибок 404
-        try {
-            await import('./libs/simple-peer.min.js');
-            window.SimplePeer = window.SimplePeer || (typeof SimplePeer !== 'undefined' ? SimplePeer : null);
-            if (!window.SimplePeer) console.warn('SimplePeer не определён');
-            else console.log('SimplePeer загружен');
-        } catch(e) {
-            console.warn('simple-peer не загружен, звонки будут недоступны');
-            window.SimplePeer = null;
-        }
-
-        try {
-            await import('./libs/RecordRTC.js');
-            window.RecordRTC = window.RecordRTC || (typeof RecordRTC !== 'undefined' ? RecordRTC : null);
-            if (!window.RecordRTC) console.warn('RecordRTC не определён');
-            else console.log('RecordRTC загружен');
-        } catch(e) {
-            console.warn('RecordRTC не загружен, видеосообщения будут недоступны');
-            window.RecordRTC = null;
-        }
+        // Устанавливаем глобальные переменные (библиотеки пока не загружены)
+        window.SimplePeer = null;
+        window.RecordRTC = null;
 
         // Запускаем основное приложение
         import('./js/app.js').catch(err => {
