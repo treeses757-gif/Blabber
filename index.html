@@ -1,8 +1,56 @@
 <!DOCTYPE html>
-<html>
-<head><title>Blabber</title></head>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#6c5ce7">
+    <title>Blabber — болтай без границ</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/theme.css">
+    <link rel="stylesheet" href="styles/components.css">
+    <!-- Карта импортов: Firebase всегда есть, библиотеки подключаем позже динамически -->
+    <script type="importmap">
+        {
+            "imports": {
+                "firebase/app": "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js",
+                "firebase/auth": "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js",
+                "firebase/firestore": "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js",
+                "firebase/storage": "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js",
+                "firebase/messaging": "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js"
+            }
+        }
+    </script>
+</head>
 <body>
-    <h1>Blabber</h1>
-    <p>Страница работает, если вы это видите.</p>
+    <div id="app">
+        <div id="sidebar"></div>
+        <div id="chatArea"></div>
+        <div id="callOverlay" style="display: none;"></div>
+    </div>
+
+    <script type="module">
+        // Динамически загружаем библиотеки, если они нужны, чтобы избежать ошибок 404
+        try {
+            await import('./libs/simple-peer.min.js');
+            window.SimplePeer = (await import('simple-peer')).default;
+        } catch(e) {
+            console.warn('simple-peer не загружен, звонки будут недоступны');
+            window.SimplePeer = null;
+        }
+        try {
+            await import('./libs/RecordRTC.js');
+            window.RecordRTC = window.RecordRTC || (await import('RecordRTC')).default;
+        } catch(e) {
+            console.warn('RecordRTC не загружен, видеосообщения будут недоступны');
+            window.RecordRTC = null;
+        }
+
+        // Запускаем основное приложение
+        import('./js/app.js').catch(err => {
+            console.error('Ошибка загрузки приложения:', err);
+            document.getElementById('app').innerHTML = '<div style="color:white; padding:20px;">Ошибка загрузки приложения. Проверьте консоль.</div>';
+        });
+    </script>
 </body>
 </html>
