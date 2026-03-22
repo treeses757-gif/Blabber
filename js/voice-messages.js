@@ -36,5 +36,10 @@ export async function startVoiceRecording(chatId, senderId) {
 export function stopVoiceRecording() {
     if (mediaRecorder && mediaRecorder.state === 'recording') {
         mediaRecorder.stop();
+    // Добавьте в конец файла:
+export function playVoiceMessage(audioElement, audioUrl) {
+    if (audioElement && audioUrl) {
+        audioElement.src = audioUrl;
+        audioElement.play().catch(e => console.error('Play error:', e));
     }
 }
