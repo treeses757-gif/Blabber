@@ -32,3 +32,11 @@ export function stopVideoRecording() {
         mediaRecorder.stop();
     }
 }
+
+// Функция для воспроизведения видео-сообщения в интерфейсе
+export function playVideoMessage(videoElement, videoUrl) {
+    if (videoElement && videoUrl) {
+        videoElement.src = videoUrl;
+        videoElement.play().catch(e => console.error('Play error:', e));
+    }
+}
