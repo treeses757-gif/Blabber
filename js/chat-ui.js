@@ -1,71 +1,79 @@
-import { sendMessage, addReaction } from './chat-core.js';
-import { playVoiceMessage } from './voice-messages.js';
-import { playVideoMessage } from './video-messages.js';
+import { sendMessage } from './chat-core.js';
+import { startVoiceRecording, stopVoiceRecording, playVoiceMessage } from './voice-messages.js';
+import { startVideoRecording, stopVideoRecording, playVideoMessage } from './video-messages.js';
+import { startCall } from './calls.js';
 
-export function renderMessage(message, isOwn, chatId, currentUserId) {
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${isOwn ? 'sent' : 'received'}`;
-    messageDiv.dataset.id = message.id;
+let currentChatId = null;
+let currentUser = null;
 
-    const time = message.timestamp ? new Date(message.timestamp.toDate()).toLocaleTimeString() : '';
-    let contentHtml = '';
-
-    switch (message.type) {
-        case 'text':
-            contentHtml = `<div class="message-text">${escapeHtml(message.text)}</div>`;
-            break;
-        case 'voice':
-            contentHtml = `
-                <div class="voice-message">
-                    <button class="voice-play-btn" data-url="${message.audioUrl}">Play</button>
-                    <span class="voice-duration"></span>
-                </div>`;
-            break;
-        case 'video':
-            contentHtml = `<video src="${message.videoUrl}" controls width="200"></video>`;
-            break;
-        case 'file':
-            contentHtml = `<a href="${message.fileUrl}" download>${message.fileName}</a>`;
-            break;
-        case 'sticker':
-            contentHtml = `<img src="${message.stickerUrl}" class="sticker" style="max-width:128px">`;
-            break;
-    }
-
-    if (message.replyTo) {
-        contentHtml = `<div class="reply-preview">↩️ Reply to ...</div>${contentHtml}`;
-    }
-
-    const reactionsHtml = Object.entries(message.reactions || {}).map(([emoji, users]) => {
-        const isActive = users.includes(currentUserId);
-        return `<button class="reaction ${isActive ? 'active' : ''}" data-emoji="${emoji}">${emoji} ${users.length}</button>`;
-    }).join('');
-
-    messageDiv.innerHTML = `
-        ${contentHtml}
-        <div class="message-meta">
-            <span class="time">${time}</span>
-            ${message.edited ? '<span class="edited">(edited)</span>' : ''}
-        </div>
-        <div class="reactions">${reactionsHtml}</div>
-    `;
-
-    // обработчики
-    const playBtn = messageDiv.querySelector('.voice-play-btn');
-    if (playBtn) playBtn.onclick = () => playVoiceMessage(playBtn.dataset.url);
-    
-    messageDiv.querySelectorAll('.reaction').forEach(btn => {
-        btn.onclick = () => addReaction(chatId, message.id, currentUserId, btn.dataset.emoji);
-    });
-
-    return messageDiv;
+export function initUI(user) {
+    currentUser = user;
+    renderChatArea();
+    attachEventHandlers();
 }
 
-function escapeHtml(str) {
-    return str.replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
+function renderChatArea() {
+    const chatArea = document.getElementById('chatArea');
+    if (!chatArea) return;
+    chatArea.innerHTML = `
+        <div class="chat-header">
+            <div class="chat-title">Blabber</div>
+            <div class="chat-actions">
+                <button id="voiceCallBtn">🎧 Аудио</button>
+                <button id="videoCallBtn">📹 Видео</button>
+                <button id="screenShareBtn">🖥️ Экран</button>
+                <button id="addFileBtn">📎 Файл</button>
+                <button id="recordVoiceBtn">🎤 Голос</button>
+                <button id="recordVideoBtn">📹 Кружок</button>
+            </div>
+        </div>
+        <div class="messages-list" id="messagesList"></div>
+        <div class="input-area">
+            <input type="text" id="messageInput" placeholder="Сообщение...">
+            <button id="sendBtn">➤</button>
+        </div>
+    `;
+}
+
+function attachEventHandlers() {
+    document.getElementById('sendBtn')?.addEventListener('click', sendTextMessage);
+    document.getElementById('messageInput')?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendTextMessage();
     });
+    document.getElementById('recordVoiceBtn')?.addEventListener('click', toggleVoiceRecording);
+    document.getElementById('recordVideoBtn')?.addEventListener('click', toggleVideoRecording);
+    document.getElementById('voiceCallBtn')?.addEventListener('click', () => startCall(currentChatId, false));
+    document.getElementById('videoCallBtn')?.addEventListener('click', () => startCall(currentChatId, true));
+    document.getElementById('screenShareBtn')?.addEventListener('click', () => startCall(currentChatId, true, true));
+    document.getElementById('addFileBtn')?.addEventListener('click', () => document.getElementById('fileInput')?.click());
+}
+
+async function sendTextMessage() {
+    const input = document.getElementById('messageInput');
+    const text = input?.value.trim();
+    if (!text || !currentChatId || !currentUser) return;
+    await sendMessage(currentChatId, currentUser.uid, text, 'text');
+    input.value = '';
+}
+
+let isRecordingVoice = false;
+function toggleVoiceRecording() {
+    if (isRecordingVoice) {
+        stopVoiceRecording();
+        isRecordingVoice = false;
+    } else {
+        startVoiceRecording(currentChatId, currentUser.uid);
+        isRecordingVoice = true;
+    }
+}
+
+let isRecordingVideo = false;
+function toggleVideoRecording() {
+    if (isRecordingVideo) {
+        stopVideoRecording();
+        isRecordingVideo = false;
+    } else {
+        startVideoRecording(currentChatId, currentUser.uid);
+        isRecordingVideo = true;
+    }
 }
