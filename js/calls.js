@@ -87,7 +87,6 @@ export function endCall() {
 }
 
 function showCallUI(remoteStream, localStream) {
-    // Реализуйте отображение видео
     console.log('Call started');
 }
 
