@@ -1,0 +1,21 @@
+:root {
+    --bg-primary: #0f0f0f;
+    --bg-secondary: #1e1e1e;
+    --bg-tertiary: #2d2d2d;
+    --text-primary: #ffffff;
+    --text-secondary: #a0a0a0;
+    --accent: #6c5ce7;
+    --accent-hover: #5a4bcf;
+    --danger: #e74c3c;
+    --success: #2ecc71;
+    --border: #3a3a4a;
+}
+
+.light-theme {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f5f5;
+    --bg-tertiary: #e0e0e0;
+    --text-primary: #000000;
+    --text-secondary: #4a4a4a;
+    --border: #d0d0d0;
+}
