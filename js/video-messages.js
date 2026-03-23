@@ -1,42 +1,34 @@
-import { uploadFile } from './chat-core.js';
-import { sendMessage } from './chat-core.js';
+import RecordRTC from 'RecordRTC';
+import { uploadFile, sendMessage } from './chat-core.js';
 
-let mediaRecorder;
-let recordedChunks = [];
+let recorder;
 let stream;
 
-export async function startVideoRecording(chatId, senderId) {
-    try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        mediaRecorder = new MediaRecorder(stream);
-        recordedChunks = [];
-        mediaRecorder.ondataavailable = e => recordedChunks.push(e.data);
-        mediaRecorder.onstop = async () => {
-            const blob = new Blob(recordedChunks, { type: 'video/mp4' });
-            const file = new File([blob], `video_${Date.now()}.mp4`, { type: 'video/mp4' });
-            const uploaded = await uploadFile(file, senderId, 'videos');
-            await sendMessage(chatId, senderId, uploaded.url, 'video');
-            if (stream) stream.getTracks().forEach(track => track.stop());
-        };
-        mediaRecorder.start();
-        // ограничение 60 секунд
-        setTimeout(() => stopVideoRecording(), 60000);
-    } catch (err) {
-        console.error('Start video recording error:', err);
-        alert('Не удалось начать запись видео');
-    }
+export async function startVideoMessageRecording() {
+    stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    recorder = new RecordRTC(stream, {
+        type: 'video',
+        mimeType: 'video/webm',
+        video: { width: 320, height: 320 }
+    });
+    recorder.startRecording();
 }
 
-export function stopVideoRecording() {
-    if (mediaRecorder && mediaRecorder.state === 'recording') {
-        mediaRecorder.stop();
-    }
+export async function stopVideoMessageRecording(chatId, senderId) {
+    recorder.stopRecording(async () => {
+        const blob = recorder.getBlob();
+        const file = new File([blob], `video_${Date.now()}.webm`, { type: 'video/webm' });
+        const uploaded = await uploadFile(file, senderId, 'video');
+        await sendMessage(chatId, senderId, uploaded.url, 'video');
+        stream.getTracks().forEach(track => track.stop());
+    });
 }
 
-// Функция для воспроизведения видео-сообщения в интерфейсе
-export function playVideoMessage(videoElement, videoUrl) {
-    if (videoElement && videoUrl) {
-        videoElement.src = videoUrl;
-        videoElement.play().catch(e => console.error('Play error:', e));
-    }
+export function playVideoMessage(url) {
+    const video = document.createElement('video');
+    video.src = url;
+    video.controls = true;
+    video.style.maxWidth = '300px';
+    document.body.appendChild(video);
+    video.play();
 }
