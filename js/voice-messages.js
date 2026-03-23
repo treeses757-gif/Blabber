@@ -1,4 +1,4 @@
-import { uploadFile } from './chat-core.js';
+import { uploadFile, sendMessage } from './chat-core.js';
 import { db } from './firebase-init.js';
 
 let mediaRecorder;
@@ -9,7 +9,6 @@ let source;
 export async function startVoiceRecording(chatId, senderId) {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     
-    // Шумоподавление через Web Audio API (простой фильтр)
     audioContext = new AudioContext();
     source = audioContext.createMediaStreamSource(stream);
     const filter = audioContext.createBiquadFilter();
@@ -36,10 +35,10 @@ export async function startVoiceRecording(chatId, senderId) {
 export function stopVoiceRecording() {
     if (mediaRecorder && mediaRecorder.state === 'recording') {
         mediaRecorder.stop();
-    // Добавьте в конец файла:
-export function playVoiceMessage(audioElement, audioUrl) {
-    if (audioElement && audioUrl) {
-        audioElement.src = audioUrl;
-        audioElement.play().catch(e => console.error('Play error:', e));
     }
+}
+
+export function playVoiceMessage(url) {
+    const audio = new Audio(url);
+    audio.play();
 }
