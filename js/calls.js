@@ -1,23 +1,18 @@
 import { db, auth } from './firebase-init.js';
-import { doc, setDoc, updateDoc, onSnapshot, deleteDoc, getDoc } from 'firebase/firestore';
-import { serverTimestamp } from 'firebase/firestore';
+import { collection, doc, setDoc, updateDoc, onSnapshot, deleteDoc, getDoc } from 'firebase/firestore';
+import Peer from 'simple-peer';
 
 let currentCall = null;
 let localStream = null;
 let peer = null;
+let remoteStream = null;
+let callOverlay = null;
 
-// Используем глобальный SimplePeer, если он доступен
-const Peer = window.SimplePeer;
-
-if (!Peer) {
-    console.warn('SimplePeer не загружен, звонки недоступны');
+export function initCalls(user) {
+    // Здесь можно подписаться на входящие звонки
 }
 
 export async function startCall(chatId, isVideo = true, isScreenShare = false) {
-    if (!Peer) {
-        alert('Звонки недоступны: не загружена библиотека WebRTC');
-        return;
-    }
     try {
         localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: isVideo });
         if (isScreenShare) {
@@ -32,7 +27,7 @@ export async function startCall(chatId, isVideo = true, isScreenShare = false) {
             chatId,
             callerId: auth.currentUser.uid,
             status: 'waiting',
-            createdAt: serverTimestamp()
+            createdAt: new Date().toISOString()
         });
 
         peer = new Peer({ initiator: true, stream: localStream, trickle: false });
@@ -42,11 +37,14 @@ export async function startCall(chatId, isVideo = true, isScreenShare = false) {
         peer.on('stream', (remoteStream) => {
             showCallUI(remoteStream, localStream);
         });
-        peer.on('error', (err) => console.error('Peer error:', err));
+        peer.on('error', (err) => {
+            console.error('Peer error:', err);
+            endCall();
+        });
 
         onSnapshot(callDoc, async (snap) => {
             const data = snap.data();
-            if (data.answer && peer && !peer.destroyed) {
+            if (data.answer && !peer.destroyed) {
                 peer.signal(data.answer);
             }
             if (data.status === 'ended') {
@@ -54,16 +52,12 @@ export async function startCall(chatId, isVideo = true, isScreenShare = false) {
             }
         });
     } catch (err) {
-        console.error('Start call error:', err);
-        alert('Не удалось начать звонок');
+        console.error('Error starting call:', err);
+        throw err;
     }
 }
 
 export async function answerCall(callId) {
-    if (!Peer) {
-        alert('Звонки недоступны: не загружена библиотека WebRTC');
-        return;
-    }
     const callDoc = doc(db, 'calls', callId);
     const snap = await getDoc(callDoc);
     const data = snap.data();
@@ -76,24 +70,52 @@ export async function answerCall(callId) {
     peer.on('stream', (remoteStream) => {
         showCallUI(remoteStream, localStream);
     });
+    peer.on('error', (err) => {
+        console.error('Peer error:', err);
+        endCall();
+    });
     peer.signal(data.offer);
 }
 
 export function endCall() {
     if (peer) peer.destroy();
     if (localStream) localStream.getTracks().forEach(track => track.stop());
+    if (remoteStream) remoteStream.getTracks().forEach(track => track.stop());
     if (currentCall) deleteDoc(doc(db, 'calls', currentCall));
     hideCallUI();
 }
 
+async function stopScreenShare() {
+    if (localStream) {
+        const screenTracks = localStream.getVideoTracks().filter(track => track.label.includes('screen'));
+        screenTracks.forEach(track => {
+            track.stop();
+            localStream.removeTrack(track);
+        });
+    }
+}
+
 function showCallUI(remoteStream, localStream) {
-    console.log('Call started');
+    callOverlay = document.getElementById('callOverlay');
+    if (!callOverlay) return;
+    callOverlay.style.display = 'flex';
+    callOverlay.innerHTML = `
+        <div class="call-container">
+            <video id="remoteVideo" autoplay playsinline></video>
+            <video id="localVideo" autoplay playsinline muted></video>
+            <button id="endCallBtn">End Call</button>
+        </div>
+    `;
+    const remoteVideo = document.getElementById('remoteVideo');
+    const localVideo = document.getElementById('localVideo');
+    remoteVideo.srcObject = remoteStream;
+    localVideo.srcObject = localStream;
+    document.getElementById('endCallBtn').onclick = () => endCall();
 }
 
 function hideCallUI() {
-    console.log('Call ended');
-}
-
-async function stopScreenShare() {
-    // Реализуйте остановку демонстрации экрана
+    if (callOverlay) {
+        callOverlay.style.display = 'none';
+        callOverlay.innerHTML = '';
+    }
 }
