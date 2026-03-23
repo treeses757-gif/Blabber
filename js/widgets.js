@@ -3,11 +3,19 @@ export async function installPWA() {
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             const deferredPrompt = e;
-            // показать кнопку "Установить приложение"
-            document.getElementById('installBtn').style.display = 'block';
-            document.getElementById('installBtn').onclick = async () => {
+            let installBtn = document.getElementById('installBtn');
+            if (!installBtn) {
+                installBtn = document.createElement('button');
+                installBtn.id = 'installBtn';
+                installBtn.textContent = 'Установить приложение';
+                installBtn.style.display = 'none';
+                document.body.appendChild(installBtn);
+            }
+            installBtn.style.display = 'block';
+            installBtn.onclick = async () => {
                 deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
+                installBtn.style.display = 'none';
             };
         });
     }
