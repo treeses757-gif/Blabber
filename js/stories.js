@@ -11,7 +11,7 @@ export async function addStory(userId, file, type = 'image') {
         mediaUrl: url,
         type,
         timestamp: serverTimestamp(),
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24h
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
     });
 }
 
@@ -19,4 +19,8 @@ export async function getActiveStories(userIds) {
     const q = query(collection(db, 'stories'), where('userId', 'in', userIds), where('expiresAt', '>', new Date()));
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => doc.data());
+}
+
+export function initStories(user) {
+    // Здесь можно загрузить и отобразить активные истории
 }
