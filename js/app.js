@@ -19,9 +19,8 @@ onAuthState(async (user) => {
         initStories(user);
         setupNotifications(user);
         installPWA();
-        initBotListener(); // слушаем команды ботов
+        initBotListener();
     } else {
-        // Показываем форму входа
         document.getElementById('app').innerHTML = '<div class="login-container"></div>';
         import('./auth.js').then(({ showLogin }) => showLogin());
     }
