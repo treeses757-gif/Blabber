@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#6c5ce7">
-    <title>Blabber — болтай без границ</title>
+    <title>Messenger</title>
     <link rel="manifest" href="/manifest.json">
     <link rel="stylesheet" href="styles/main.css">
     <link rel="stylesheet" href="styles/theme.css">
@@ -16,7 +16,9 @@
                 "firebase/auth": "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js",
                 "firebase/firestore": "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js",
                 "firebase/storage": "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js",
-                "firebase/messaging": "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js"
+                "firebase/messaging": "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js",
+                "simple-peer": "./simple-peer.js",
+                "RecordRTC": "./RecordRTC.js"
             }
         }
     </script>
@@ -28,16 +30,14 @@
         <div id="callOverlay" style="display: none;"></div>
     </div>
 
-    <script type="module">
-        // Устанавливаем глобальные переменные (библиотеки пока не загружены)
-        window.SimplePeer = null;
-        window.RecordRTC = null;
-
-        // Запускаем основное приложение
-        import('./js/app.js').catch(err => {
-            console.error('Ошибка загрузки приложения:', err);
-            document.getElementById('app').innerHTML = '<div style="color:white; padding:20px;">Ошибка загрузки приложения. Проверьте консоль.</div>';
-        });
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(reg => console.log('SW registered', reg))
+                .catch(err => console.error('SW failed', err));
+        }
     </script>
+
+    <script type="module" src="js/app.js"></script>
 </body>
 </html>
