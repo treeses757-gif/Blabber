@@ -131,3 +131,54 @@
     align-items: center;
     justify-content: center;
 }
+/* Форма входа */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+}
+.login-form {
+    background: var(--bg-secondary);
+    padding: 2rem;
+    border-radius: 12px;
+    width: 300px;
+    text-align: center;
+}
+.login-form input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+.login-form button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 8px;
+    background: var(--accent);
+    color: white;
+    cursor: pointer;
+}
+.login-form button:hover {
+    background: var(--accent-hover);
+}
+
+/* Кнопка установки PWA */
+#installBtn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    cursor: pointer;
+    z-index: 1000;
+}
