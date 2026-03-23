@@ -1,4 +1,4 @@
-import { db } from './firebase-init.js';
+import { db, auth } from './firebase-init.js';
 import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, orderBy, query, onSnapshot, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { storage } from './firebase-init.js';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
